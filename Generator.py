@@ -1,9 +1,4 @@
-
-# coding: utf-8
-
-# In[ ]:
-
-
+# Import Library
 import tensorflow as tf
 
 
@@ -15,9 +10,6 @@ import tensorflow as tf
 # #### http://torch.ch/blog/2016/02/04/resnets.html
 
 # #### Functions for Batch Normalization, Residual Bloacks and Generator
-
-# In[1]:
-
 
 def batchnorm(Ylogits, is_test, iteration, offset, convolutional=False):
     exp_moving_avg = tf.train.ExponentialMovingAverage(0.999, iteration) # adding the iteration prevents from averaging across non-existing iterations
@@ -75,9 +67,6 @@ def generator(input, D1, D2, U1, U2, DB1, DB2, UB1, UB2, res_dict):
 
 
 # #### Generator Variables
-
-# In[ ]:
-
 
 # DEFINING GENERATOR VARIABLES
 # ````````````````````````````
