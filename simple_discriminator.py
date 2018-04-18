@@ -21,9 +21,9 @@ def conv2d_layer(inputconv, num_filter=64, filter_h=7, filter_w=7, stride_h=1, s
         return conv
 
 # Build model: simplified discriminator
-def build_gen_discriminator(input_src, name="discriminator"):
+def build_gen_discriminator(input_src, scope="discriminator"):
 
-    with tf.variable_scope(name):
+    with tf.variable_scope(scope):
         f = 4
 
         layer1 = conv2d_layer(input_src, ndf, f, f, 2, 2, 0.02, "SAME", "c1", do_norm=False, relufactor=0.2)
