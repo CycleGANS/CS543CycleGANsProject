@@ -1,6 +1,8 @@
 import tensorflow as tf
+import utils
 import Generator as gen
 import simple_discriminator as dis
+
 
 
 # Creating placeholder for images
@@ -77,3 +79,16 @@ DX_train_step = optimizer.minimize(DX_tot_loss, var_list = DX_variables)
 DY_train_step = optimizer.minimize(DY_tot_loss, var_list = DY_variables)
 
 
+# Summary for Tensor Board
+G_summary = utils.summary({G_adv_loss: 'G_adv_loss',
+                           G_cyc_loss: 'G_cyc_loss',
+                           G_tot_loss: 'G_tot_loss'})
+F_summary = utils.summary({F_adv_loss: 'F_adv_loss',
+                           F_cyc_loss: 'F_cyc_loss',
+                           F_tot_loss: 'F_tot_loss'})
+DX_summary = utils.summary({DX_real_loss: 'DX_real_loss',
+							DX_fake_loss: 'DX_fake_loss',
+							DX_tot_loss: 'DX_tot_loss'})
+DY_summary = utils.summary({DY_real_loss: 'DY_real_loss',
+							DY_fake_loss: 'DY_fake_loss',
+							DY_tot_loss: 'DY_tot_loss'})
