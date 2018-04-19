@@ -9,14 +9,14 @@ def conv2d_layer(inputconv, num_filter=64, filter_h=7, filter_w=7, stride_h=1, s
                                         weights_initializer=tf.truncated_normal_initializer(stddev=stddev),
                                         biases_initializer=tf.constant_initializer(0.0))
         
-        if do_norm:
-            conv = instance_norm(conv)
+        # if do_norm:
+        #     conv = instance_norm(conv)  # Need the corresponding function.
             
-        if do_relu:
-            if(relufactor == 0):
-                conv = tf.nn.relu(conv,"relu")
-            else:
-                conv = lrelu(conv, relufactor, "lrelu")
+        # if do_relu:
+        #     if(relufactor == 0):
+        #         conv = tf.nn.relu(conv,"relu")
+        #     else:
+        #         conv = lrelu(conv, relufactor, "lrelu")   # Need a leaky relu function.
 
         return conv
 
