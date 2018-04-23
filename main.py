@@ -101,8 +101,8 @@ Y_data = getdata(sess, Ypath, batch_size)
 
 for i in range(epochs):
     for j in range(batch_size):
-        X_batch = batch(X_data)
-        Y_batch = batch(Y_data)
+        X_batch = batch(sess, X_data)
+        Y_batch = batch(sess, Y_data)
 
         GofXforDis, FofYforDis = sess.run([GofX, FofY], feed_dict={X: X_batch, Y: Y_batch})
 
