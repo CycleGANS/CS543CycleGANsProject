@@ -6,10 +6,12 @@ import simple_discriminator as dis
 
 # Creating placeholder for images
 # Change the image_shape value
-X = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3)
-Y = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3)
-#GofX = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3)
-#FofY = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3)
+X = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3])
+Y = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3])
+GofX = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3])
+FofY = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3])
+GofFofY = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3])
+FofGofX = tf.placeholder(tf.float32, [None, image_shape, image_shape, 3])
 
 
 """ We will have 2 generators: G and F
@@ -45,14 +47,16 @@ D_GofXlogits = dis.build_gen_discriminator(GofX, scope = 'DY')
 # Adversary and Cycle Losses for G
 G_adv_loss = tf.reduce_mean(tf.squared_difference(D_GofXlogits, tf.ones_like(D_GofXlogits)))
 G_cyc_loss = tf.reduce_mean(tf.abs(GofFofY-Y)) * G_cyc_loss_weight        # Put lambda for G cyclic loss here
+G_tot_loss = G_adv_loss + G_cyc_loss
 
 # Adversary and Cycle Losses for F
 F_adv_loss = tf.reduce_mean(tf.squared_difference(D_FofYlogits,tf.ones_like(D_FofYlogits)))
 F_cyc_loss = tf.reduce_mean(tf.abs(FofGofX-X)) * F_cyc_loss_weight        # Put lambda for F cyclic loss here
+F_tot_loss = F_adv_loss + F_cyc_loss
 
 # Total Losses for G and F
-G_tot_loss = G_adv_loss + G_cyc_loss + F_cyc_loss
-F_tot_loss = F_adv_loss + F_cyc_loss + G_cyc_loss
+GF_tot_loss = G_tot_loss + F_tot_loss
+
 
 # Losses for DX
 DX_real_loss = tf.reduce_mean(tf.squared_difference(D_Xlogits, tf.ones_like(D_Xlogits)))
@@ -68,20 +72,41 @@ DY_tot_loss = (DY_real_loss+DY_fake_loss)/2
 # Getting all the variables that belong to the different networks
 # I.e. The weights and biases in G, F, DX and DY
 network_variables = tf.trainable_variables()					#This gets all the variables that will be initialized
-G_variables = [variables for variables in network_variables if 'G' in variables.name]
-F_variables = [variables for variables in network_variables if 'F' in variables.name]
+GF_variables = [variables for variables in network_variables if 'G' in variables.name or 'F' in variables.name]
 DX_variables = [variables for variables in network_variables if 'DX' in variables.name]
 DY_variables = [variables for variables in network_variables if 'DY' in variables.name]
 
 optimizer = tf.train.AdamOptimizer(learning_rate)    			#Put the learning rate here
-G_train_step = optimizer.minimize(G_tot_loss, var_list = G_variables)
-F_train_step = optimizer.minimize(F_tot_loss, var_list = F_variables)
+GF_train_step = optimizer.minimize(GF_tot_loss, var_list = GF_variables)
 DX_train_step = optimizer.minimize(DX_tot_loss, var_list = DX_variables)
 DY_train_step = optimizer.minimize(DY_tot_loss, var_list = DY_variables)
 
 
 # Summary for Tensor Board
-G_summary = tf.summary.scalar("G_tot_loss", G_tot_loss)
-F_summary = tf.summary.scalar("F_tot_loss", F_tot_loss)
+GF_summary = tf.summary.scalar("GF_tot_loss", GF_tot_loss)
 DX_summary = tf.summary.scalar("DX_tot_loss", DX_tot_loss)
 DY_summary = tf.summary.scalar("DY_tot_loss", DY_tot_loss)
+
+
+# Training
+# Initialization
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
+
+
+for i in range(epochs):
+	for j in range(batch_size):
+		X_batch = # Put the X batch data here
+		Y_batch = # Put the Y batch data here
+
+		GofXforDis, FofYforDis = sess.run([GofX, FofY], feed_dict={X: X_batch, Y: Y_batch})
+
+		DX_output, DX_vis_summary = sess.run([DX_train_step, DX_summary], feed_dict={X; X_batch, FofY: FofYforDis})
+
+		DY_output, DY_vis_summary = sess.run([DY_train_step, DY_summary], feed_dict={Y: Y_batch, GofX: GofXforDis})
+
+		GF_output, GF_vis_summ = sess.run([GF_train_step, GF_summary], feed_dict={X: X_batch, Y:Y_batch})
+
+
+
