@@ -115,6 +115,6 @@ for i in range(epochs):
 
         GF_output, GF_vis_summ = sess.run([GF_train_step, GF_summary], feed_dict={X: X_batch, Y: Y_batch})
 
-		train_summary_writer.add_summary(DX_vis_summary, j)
-		train_summary_writer.add_summary(DY_vis_summary, j)
-		train_summary_writer.add_summary(GF_vis_summ, j)
+        train_summary_writer.add_summary(DX_vis_summary, j)
+        train_summary_writer.add_summary(DY_vis_summary, j)
+        train_summary_writer.add_summary(GF_vis_summ, j)
