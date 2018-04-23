@@ -14,15 +14,21 @@ def _parse_image(path):
     img = tf.image.random_flip_left_right(img)
     img = tf.image.resize_images(img, [load_size, load_size])
     img = (img - tf.reduce_min(img)) / (tf.reduce_max(img) - tf.reduce_min(img))
-    img = tf.random_crop(img, [crop_size, crop_size, channels])
+    img = tf.random_crop(img, [crop_size, crop_size, 3])
     img = img * 2 - 1
     return img
 
 
 def getdata(sess, paths, batch_size):
+    '''
+    Arg : session       - tensor flow session
+          path          - global path to dataset
+          batch_size    - size of the batch
+
+    Return : batch graph
+    '''
 
     prefetch_batch = 2
-    drop_remainder = True
     num_threads = 16
     shuffle = True
     buffer_size = 4096
