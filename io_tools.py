@@ -19,7 +19,7 @@ def _parse_image(path):
     return img
 
 
-def getdata(sess, paths, batch_size):
+def getdata(sess, paths, batch_size, shuffle=True):
     '''
     Arg : session       - tensor flow session
           path          - global path to dataset
@@ -30,7 +30,6 @@ def getdata(sess, paths, batch_size):
 
     prefetch_batch = 2
     num_threads = 16
-    shuffle = True
     buffer_size = 4096
     repeat = -1
 
