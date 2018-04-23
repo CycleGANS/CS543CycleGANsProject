@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-# General convolution layer.
+
 def _conv2d_layer(input_conv, num_filter=64, filter_h=4, filter_w=4, stride_h=1, stride_w=1, stddev=0.02, 
                    padding="VALID", name="conv2d", do_norm=True, do_relu=True, relu_alpha=0):
     """Convolution layer for discriminator.
@@ -16,8 +16,8 @@ def _conv2d_layer(input_conv, num_filter=64, filter_h=4, filter_w=4, stride_h=1,
                                         weights_initializer=tf.truncated_normal_initializer(stddev=stddev),
                                         biases_initializer=tf.constant_initializer(0.0))
         
-        # if do_norm:
-        #     conv = instance_norm(conv)  # Need the corresponding function.
+        if do_norm:
+            conv = _normalization(conv)
             
         if do_relu:
             if(relu_alpha == 0):
