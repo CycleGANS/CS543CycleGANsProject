@@ -94,9 +94,12 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 
+train_summary_writer = tf.summary.FileWriter( summmary_path + '/train', sess.graph)
+test_summary_writer = tf.summary.FileWriter( summmary_path + '/test', sess.graph)
+
 
 for i in range(epochs):
-	for j in range(batch_size):
+	for j in range(no_of_batches):
 		X_batch = # Put the X batch data here
 		Y_batch = # Put the Y batch data here
 
@@ -107,6 +110,10 @@ for i in range(epochs):
 		DY_output, DY_vis_summary = sess.run([DY_train_step, DY_summary], feed_dict={Y: Y_batch, GofX: GofXforDis})
 
 		GF_output, GF_vis_summ = sess.run([GF_train_step, GF_summary], feed_dict={X: X_batch, Y:Y_batch})
+
+		train_summary_writer.add_summary(DX_vis_summary, j)
+		train_summary_writer.add_summary(DY_vis_summary, j)
+		train_summary_writer.add_summary(GF_vis_summ, j)
 
 
 
