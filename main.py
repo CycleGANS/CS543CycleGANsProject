@@ -93,12 +93,9 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 
-<<<<<<< HEAD
+train_summary_writer = tf.summary.FileWriter( summmary_path + '/train', sess.graph)
+test_summary_writer = tf.summary.FileWriter( summmary_path + '/test', sess.graph)
 
-
-
-
-=======
 dataset = 'horse2zebra'
 Xpath = glob('./datasets/' + dataset + '/trainA/*.jpg')
 Ypath = glob('./datasets/' + dataset + '/trainB/*.jpg')
@@ -109,15 +106,15 @@ for i in range(epochs):
     for j in range(batch_size):
         X_batch = batch(sess, X_data)
         Y_batch = batch(sess, Y_data)
->>>>>>> 589e52a2920e03088f2df077b4e12712e43a8d58
 
-<<<<<<< HEAD
+        GofXforDis, FofYforDis = sess.run([GofX, FofY], feed_dict={X: X_batch,Y: Y_batch})
 
-
-=======
-        DX_output, DX_vis_summary = sess.run([DX_train_step, DX_summary], feed_dict={X; X_batch, FofY: FofYforDis})
->>>>>>> 589e52a2920e03088f2df077b4e12712e43a8d58
+        DX_output, DX_vis_summary = sess.run([DX_train_step, DX_summary], feed_dict={X: X_batch, FofY: FofYforDis})
 
         DY_output, DY_vis_summary = sess.run([DY_train_step, DY_summary], feed_dict={Y: Y_batch, GofX: GofXforDis})
 
         GF_output, GF_vis_summ = sess.run([GF_train_step, GF_summary], feed_dict={X: X_batch, Y: Y_batch})
+
+		train_summary_writer.add_summary(DX_vis_summary, j)
+		train_summary_writer.add_summary(DY_vis_summary, j)
+		train_summary_writer.add_summary(GF_vis_summ, j)
