@@ -20,9 +20,15 @@ def _parse_image(path):
 
 
 def getdata(sess, paths, batch_size):
+    '''
+    Arg : session       - tensor flow session
+          path          - global path to dataset
+          batch_size    - size of the batch
+
+    Return : batch graph
+    '''
 
     prefetch_batch = 2
-    drop_remainder = True
     num_threads = 16
     shuffle = True
     buffer_size = 4096
