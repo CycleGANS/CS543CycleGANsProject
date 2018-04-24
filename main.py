@@ -1,7 +1,9 @@
 import tensorflow as tf
 import Generator as gen
 import simple_discriminator as dis
-
+import os
+from PIL import Image
+import numpy as np
 
 # Creating placeholder for images
 # Change the image_shape value
@@ -103,7 +105,7 @@ X_data = getdata(sess, Xpath, batch_size)
 Y_data = getdata(sess, Ypath, batch_size)
 
 for i in range(epochs):
-    for j in range(batch_size):
+    for j in range(no_of_batches):
         X_batch = batch(sess, X_data)
         Y_batch = batch(sess, Y_data)
 
@@ -118,3 +120,21 @@ for i in range(epochs):
         train_summary_writer.add_summary(DX_vis_summary, j)
         train_summary_writer.add_summary(DY_vis_summary, j)
         train_summary_writer.add_summary(GF_vis_summ, j)
+
+        if (j+1)%1000==0:
+        	[GofX_sample, FofY_sample, GofFofY_sample, FofGofX_sample] = sess.run([GofX, FofY, GofFofY, FofGofX], feed_dict={X: X_batch, Y: Y_batch})
+
+        	#Saving sample training images
+        	# Works only for batch size 1
+        	GofX_sample = Image.fromarray(GofX_sample, "RGB")
+        	FofY_sample = Image.fromarray(FofY_sample, "RGB")
+        	GofFofY_sample = Image.fromarray(GofFofY_sample, "RGB")
+        	FofGofX_sample = Image.fromarray(FofGofX_sample, "RGB")
+
+        	X_batch.save(os.path.join(cur_dir,"X"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+        	Y_batch.save(os.path.join(cur_dir,"Y"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+        	GofX_sample.save(os.path.join(cur_dir,"GofX"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+        	FofY_sample.save(os.path.join(cur_dir,"FofY"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+        	GofFofY_sample.save(os.path.join(cur_dir,"GofFofY"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+        	FofGofX_sample.save(os.path.join(cur_dir,"FofGofX"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+
