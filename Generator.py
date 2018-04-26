@@ -113,7 +113,7 @@ def generator(input_imgs, no_of_residual_blocks, output_channels=64, scope):
     return Y_res2 + Y
 
     # #### Generator Variables
-    with tf.variable_scope(scope):
+    with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
 
         # For Downsampling
         YD0 = tf.nn.relu(batchnorm(convolution_layer(input_imgs, output_channels, filter_size=7, stride=1)))
