@@ -129,4 +129,4 @@ def generator(input_imgs, no_of_residual_blocks, output_channels=64, scope):
         YU2 = tf.nn.relu(batchnorm(deconvolution_layer(YU1, output_channels, filter_size=3, stride=2)))
         Y_out = tf.nn.tanh(convolution_layer(YU2, 3, filter_size=7, stride=1))
 
-    return Y_out
+        return Y_out
