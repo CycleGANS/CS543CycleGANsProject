@@ -44,12 +44,12 @@ def training(image_shape, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambda = 10.0, le
 
     # Setting up losses for generators and discriminators
     """ adv_losses are adversary losses
-    	cyc_losses are cyclic losses
-    	real_losses are losses from real images
-    	fake_losses are from generated images
+        cyc_losses are cyclic losses
+        real_losses are losses from real images
+        fake_losses are from generated images
     """
     # https://arxiv.org/pdf/1611.04076.pdf this paper states that using cross entropy as loss
-    # causes the gradient to vanish. To avoid this problem, least squares losses are used as suggested by the paper.
+    # causes the gradient to vanish. To avoid this problem, least square losses are used as suggested by the paper.
 
     # Adversary and Cycle Losses for G
     G_adv_loss = tf.reduce_mean(tf.squared_difference(D_GofXlogits, tf.ones_like(D_GofXlogits)))
