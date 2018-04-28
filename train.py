@@ -4,8 +4,9 @@ import simple_discriminator as dis
 import os
 from PIL import Image
 import numpy as np
+import glob
 
-def training(image_shape, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambda = 10.0, learning_rate=0.0002 ):
+def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambda = 10.0, learning_rate=0.0002 ):
 
     if image_shape == 256:
         no_of_residual_blocks = 9
@@ -94,27 +95,50 @@ def training(image_shape, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambda = 10.0, le
     DX_summary = tf.summary.scalar("DX_tot_loss", DX_tot_loss)
     DY_summary = tf.summary.scalar("DY_tot_loss", DY_tot_loss)
 
+    # For saving the model, the max_to_keep parameter saves just 5 models. I did this so that we don't run out of memory.
+    saver = tf.train.Saver(max_to_keep=5)
 
-    # Training
-    # Initialization
-    init = tf.global_variables_initializer()
-    sess = tf.Session()
-    sess.run(init)
+    # Session on GPU
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config=config)
 
-    train_summary_writer = tf.summary.FileWriter( summmary_path + '/train', sess.graph)
-    test_summary_writer = tf.summary.FileWriter( summmary_path + '/test', sess.graph)
-
+    # Obtaining dataset
+    # Training data
+    """ Need to define getdata"""
     dataset = 'horse2zebra'
-    Xpath = glob('./datasets/' + dataset + '/trainA/*.jpg')
-    Ypath = glob('./datasets/' + dataset + '/trainB/*.jpg')
-    X_data = getdata(sess, Xpath, batch_size)
+    Xpath = glob('./Datasets/' + dataset + '/trainA/*.jpg')
+    Ypath = glob('./Datasets/' + dataset + '/trainB/*.jpg')
+    X_data = getdata(sess, Xpath, batch_size)     # Need to define getdata
     Y_data = getdata(sess, Ypath, batch_size)
 
-    for i in range(epochs):
-        for j in range(no_of_batches):
-            X_batch = batch(sess, X_data)
+    # Test data
+    X_test_path = glob('./Datasets/' + dataset + '/testA/*.jpg')
+    Y_test_path = glob('./Datasets/' + dataset + '/testB/*.jpg')
+    X_test_data = getdata(sess, X_test_path, batch_size)     # Need to define getdata
+    Y_test_data = getdata(sess, Y_test_path, batch_size)     # Need to define getdata
+
+    # Creating a file to write the summaries for tensorboard
+    train_summary_writer = tf.summary.FileWriter( './Summary/train/'+dataset, sess.graph)
+
+    # Initialization if starting from scratch, else restore the variables
+    try:
+        saver.restore(sess, "/Checkpoints/"+dataset)
+    except:
+        init = tf.global_variables_initializer()
+        sess.run(init)
+
+
+    # Training
+    no_of_iterations=0
+    for i in range(1,epochs+1):
+        for j in range(1,no_of_batches+1):
+            no_of_iterations += 1
+
+            X_batch = batch(sess, X_data)   #Define batch
             Y_batch = batch(sess, Y_data)
 
+            # Creating fake images for the discriminators
             GofXforDis, FofYforDis = sess.run([GofX, FofY], feed_dict={X: X_batch,Y: Y_batch})
 
             DX_output, DX_vis_summary = sess.run([DX_train_step, DX_summary], feed_dict={X: X_batch, FofY: FofYforDis})
@@ -123,24 +147,45 @@ def training(image_shape, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambda = 10.0, le
 
             GF_output, GF_vis_summ = sess.run([GF_train_step, GF_summary], feed_dict={X: X_batch, Y: Y_batch})
 
-            train_summary_writer.add_summary(DX_vis_summary, j)
-            train_summary_writer.add_summary(DY_vis_summary, j)
-            train_summary_writer.add_summary(GF_vis_summ, j)
+            train_summary_writer.add_summary(DX_vis_summary, no_of_iterations)
+            train_summary_writer.add_summary(DY_vis_summary, no_of_iterations)
+            train_summary_writer.add_summary(GF_vis_summ, no_of_iterations)
 
-            if (j+1)%1000==0:
-            	[GofX_sample, FofY_sample, GofFofY_sample, FofGofX_sample] = sess.run([GofX, FofY, GofFofY, FofGofX], feed_dict={X: X_batch, Y: Y_batch})
+            # Creating Checkpoint
+            if no_of_iterations  % 800 == 0:
+                save_path = saver.save(sess, '/Checkpoints/'+dataset+'/Epoch_(%d)_(%dof%d).ckpt' % ( i, j, no_of_batches))
+                print('Model saved in file: % s' % save_path)
 
-            	#Saving sample training images
-            	# Works only for batch size 1
-            	GofX_sample = Image.fromarray(GofX_sample, "RGB")
-            	FofY_sample = Image.fromarray(FofY_sample, "RGB")
-            	GofFofY_sample = Image.fromarray(GofFofY_sample, "RGB")
-            	FofGofX_sample = Image.fromarray(FofGofX_sample, "RGB")
+            # To see what some of the test images look like after certain number of iterations
+            if no_of_iterations%150==0:
+                X_test_batch = batch(sess, X_test_data)   #Define batch
+                Y_test_batch = batch(sess, Y_test_data)
+            	[GofX_sample, FofY_sample, GofFofY_sample, FofGofX_sample] = sess.run([GofX, FofY, GofFofY, FofGofX], feed_dict={X: X_test_batch, Y: Y_test_batch})
 
-            	X_batch.save(os.path.join(cur_dir,"X"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
-            	Y_batch.save(os.path.join(cur_dir,"Y"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
-            	GofX_sample.save(os.path.join(cur_dir,"GofX"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
-            	FofY_sample.save(os.path.join(cur_dir,"FofY"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
-            	GofFofY_sample.save(os.path.join(cur_dir,"GofFofY"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
-            	FofGofX_sample.save(os.path.join(cur_dir,"FofGofX"+str(i)+str(j)+".jpeg"))     #Need to define current directory and path
+            	#Saving sample test images
+                for i in range(batch_size):
+                    X_test_image = Image.fromarray(X_test_batch[i], "RGB")
+                    Y_test_image = Image.fromarray(Y_test_batch[i], "RGB")
+                	GofX_image = Image.fromarray(GofX_sample[i], "RGB")
+                	FofY_image = Image.fromarray(FofY_sample[i], "RGB")
+                	GofFofY_image = Image.fromarray(GofFofY_sample[i], "RGB")
+                	FofGofX_image = Image.fromarray(FofGofX_sample[i], "RGB")
 
+                    new_im_X = Image.new('RGB', (image_shape, image_shape))
+                    new_im_X.paste(X_test_image, (0,0))
+                    new_im_X.paste(GofX_image, (image_shape,0))
+                    new_im_X.paste(FofGofX_image, (image_shape*2,0))
+
+                    new_im_Y = Image.new('RGB', (image_shape, image_shape))
+                    new_im_Y.paste(Y_test_image, (0,0))
+                    new_im_Y.paste(FofY_image, (image_shape,0))
+                    new_im_Y.paste(GofFofY_image, (image_shape*2,0))
+
+                	new_im_X.save('./Output/train/X'+str(i)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
+                	new_im_Y.save('./Output/train/Y'+str(i)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
+
+        print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
+
+    save_path = saver.save(sess, '/Checkpoints/'+dataset+'/Epoch_(%d)_(%dof%d).ckpt' % ( i, j, no_of_batches))
+    print('Model saved in file: % s' % save_path)
+    sess.close()
