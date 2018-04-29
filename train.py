@@ -163,13 +163,13 @@ def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambd
             	[GofX_sample, FofY_sample, GofFofY_sample, FofGofX_sample] = sess.run([GofX, FofY, GofFofY, FofGofX], feed_dict={X: X_test_batch, Y: Y_test_batch})
 
             	#Saving sample test images
-                for i in range(batch_size):
-                    X_test_image = Image.fromarray(X_test_batch[i], "RGB")
-                    Y_test_image = Image.fromarray(Y_test_batch[i], "RGB")
-                	GofX_image = Image.fromarray(GofX_sample[i], "RGB")
-                	FofY_image = Image.fromarray(FofY_sample[i], "RGB")
-                	GofFofY_image = Image.fromarray(GofFofY_sample[i], "RGB")
-                	FofGofX_image = Image.fromarray(FofGofX_sample[i], "RGB")
+                for l in range(batch_size):
+                    X_test_image = Image.fromarray(X_test_batch[l], "RGB")
+                    Y_test_image = Image.fromarray(Y_test_batch[l], "RGB")
+                	GofX_image = Image.fromarray(GofX_sample[l], "RGB")
+                	FofY_image = Image.fromarray(FofY_sample[l], "RGB")
+                	GofFofY_image = Image.fromarray(GofFofY_sample[l], "RGB")
+                	FofGofX_image = Image.fromarray(FofGofX_sample[l], "RGB")
 
                     new_im_X = Image.new('RGB', (image_shape, image_shape))
                     new_im_X.paste(X_test_image, (0,0))
@@ -181,8 +181,8 @@ def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambd
                     new_im_Y.paste(FofY_image, (image_shape,0))
                     new_im_Y.paste(GofFofY_image, (image_shape*2,0))
 
-                	new_im_X.save('./Output/train/X'+str(i)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
-                	new_im_Y.save('./Output/train/Y'+str(i)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
+                	new_im_X.save('./Output/train/X'+str(l)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
+                	new_im_Y.save('./Output/train/Y'+str(l)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
 
         print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
 
