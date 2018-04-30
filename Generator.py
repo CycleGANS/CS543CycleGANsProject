@@ -5,7 +5,7 @@ import tensorflow as tf
 # ### If you want to understand the conv2d function and its inputs, go to these pages
 # #### https://www.tensorflow.org/api_docs/python/tf/contrib/layers/conv2d
 # #### https://stackoverflow.com/questions/34642595/tensorflow-strides-argument
-# 
+#
 # ### If you want to understand the residual blocks used in the generator, go to this page
 # #### http://torch.ch/blog/2016/02/04/resnets.html
 
@@ -29,7 +29,7 @@ import tensorflow as tf
         # D0 = tf.get_variable('D0', dtype=tf.float32, initializer = tf.truncated_normal([7,7,3,output_channels] ,stddev=0.1))
         # DB0 = tf.get_variable('DB0', dtype=tf.float32, initializer = tf.zeros([output_channels]))
         # # First layer with img_width x img_height x 64 dimension. Filter size 7x7
-        # D1 = tf.get_variable('D1', dtype=tf.float32, initializer = tf.truncated_normal([3,3,output_channels,output_channels*2] ,stddev=0.1))  
+        # D1 = tf.get_variable('D1', dtype=tf.float32, initializer = tf.truncated_normal([3,3,output_channels,output_channels*2] ,stddev=0.1))
         # DB1 = tf.get_variable('DB1', dtype=tf.float32, initializer = tf.zeros([output_channels * 2]))
         # # Second layer with img_width/2 x img_height/2 x 128 dimension. Filter size 3x3
         # D2 = tf.get_variable('D2', dtype=tf.float32, initializer = tf.truncated_normal([3,3,output_channels*2,output_channels*4], stddev=0.1))
@@ -40,9 +40,9 @@ import tensorflow as tf
         # # Define Variables for Residual Blocks
         # res_dict = {}
         # for i in range(1,NO_OF_RESIDUAL_BLOCKS+1):
-        #     res_dict[i] = {'R1'+str(i) :tf.get_variable('R1'+str(i), dtype=tf.float32, initializer = tf.truncated_normal([3,3,output_channels * 4,output_channels * 4] ,stddev=0.1)), 
+        #     res_dict[i] = {'R1'+str(i) :tf.get_variable('R1'+str(i), dtype=tf.float32, initializer = tf.truncated_normal([3,3,output_channels * 4,output_channels * 4] ,stddev=0.1)),
         #                    'RB1'+str(i) :tf.get_variable('RB1'+str(i), dtype=tf.float32, initializer = tf.Variable(output_channels * 4)/10),
-        #                    'R2'+str(i) :tf.get_variable('R2'+str(i), dtype=tf.float32, initializer = tf.Variable(tf.truncated_normal([3,3,K,K] ,stddev=0.1)), 
+        #                    'R2'+str(i) :tf.get_variable('R2'+str(i), dtype=tf.float32, initializer = tf.Variable(tf.truncated_normal([3,3,K,K] ,stddev=0.1)),
         #                    'RB2'+str(i) :tf.get_variable('RB2'+str(i), dtype=tf.float32, initializer = tf.Variable(tf.ones([J])/10)
         #                       }
         #      # Need to put the right input and output layer numbers
@@ -54,7 +54,7 @@ import tensorflow as tf
         # U2 = tf.get_variable('U2', dtype=tf.float32, initializer = tf.truncated_normal([9,9,L,3] ,stddev=0.1))
         # #Here L is the number of output channels from the previous layer and is the number of input channels in this layer
         # UB2 = tf.Variable('UB2', dtype=tf.float32, initializer = tf.ones([3])/10)
-            
+
         # # DEFINING THE LAYERS
         # # ```````````````````
         # # For Downsampling
@@ -67,12 +67,12 @@ import tensorflow as tf
         # YD2 = tf.nn.conv2d(YD1r, D2, strides=[1, stride, stride, 1], padding='SAME')
         # YD2bn, update_emaYD2 = batchnorm(YD2, tst, iter, DB2, convolutional=True)
         # YD2r = tf.nn.relu(YD2bn)
-        
+
         # # For Residual Blocks
         # YR = YD2r
         # for i in range(1,NO_OF_RESIDUAL_BLOCKS+1):
         #     YR = residual_block(YR, res_dict[i]['R1'+str(i)], res_dict[i]['R2'+str(i)], res_dict[i]['RB1'+str(i)], res_dict[i]['RB2'+str(i)])
-            
+
         # # For Upsampling
         # stride = 1/2
         # # Second Last Layer
@@ -82,7 +82,7 @@ import tensorflow as tf
         # # Last Layer
         # YU2 = tf.nn.conv2d_transpose(YU1r, U2, strides=[1, stride, stride, 1], padding='SAME')
         # Y_out = tf.nn.tanh(YU2)
-        
+
         # return Y_out
 """
 
@@ -95,27 +95,28 @@ def generator(input_imgs, no_of_residual_blocks, scope, output_channels=64):
         return bn
 
     # Function for Convolution Layer
-    def convolution_layer(input_images, filter_size, stride, o_c=64, padding="VALID", scope_name = "convolution"):
+    def convolution_layer(input_images, filter_size, stride, o_c=64, padding="VALID", scope_name="convolution"):
         # o_c = Number of output channels/filters
         with tf.variable_scope(scope_name):
-            conv = tf.contrib.layers.conv2d(input_images, o_c, filter_size, stride, padding = padding, activation_fn=None, 
-                                        weights_initializer=tf.truncated_normal_initializer(stddev=0.02))
+            conv = tf.contrib.layers.conv2d(input_images, o_c, filter_size, stride, padding=padding, activation_fn=None,
+                                            weights_initializer=tf.truncated_normal_initializer(stddev=0.02))
             return conv
 
     # Function for deconvolution layer
-    def deconvolution_layer(input_images, o_c, filter_size, stride, padding="VALID", scope_name = "deconvolution"):
+    def deconvolution_layer(input_images, o_c, filter_size, stride, padding="VALID", scope_name="deconvolution"):
         with tf.variable_scope(scope_name):
-            deconv = tf.contrib.layers.conv2d_transpose(input_images, o_c, filter_size, stride, activation_fn=None, 
-                                        weights_initializer=tf.truncated_normal_initializer(stddev=0.02))
+            deconv = tf.contrib.layers.conv2d_transpose(input_images, o_c, filter_size, stride, activation_fn=None,
+                                                        weights_initializer=tf.truncated_normal_initializer(stddev=0.02))
             return deconv
 
     # Function for Residual Block
-    def residual_block(Y, scope_name = "residual_block"):
+    def residual_block(Y, scope_name="residual_block"):
         with tf.variable_scope(scope_name):
-            Y = tf.pad(Y, [[0, 0], [1, 1], [1, 1], [0, 0]], "REFLECT")
-            Y_res1 = tf.nn.relu(batchnorm(convolution_layer(Y, output_channels*4, filter_size=3, stride=1, scope_name = "C1")))
+            Y_in = tf.pad(Y, [[0, 0], [1, 1], [1, 1], [0, 0]], "REFLECT")
+            Y_res1 = tf.nn.relu(batchnorm(convolution_layer(Y_in, filter_size=3, stride=1, o_c=output_channels * 4, scope_name="C1")))
             Y_res1 = tf.pad(Y_res1, [[0, 0], [1, 1], [1, 1], [0, 0]], "REFLECT")
-            Y_res2 = batchnorm(convolution_layer(Y_res1, output_channels*4, filter_size=3, stride=1, scope_name = "C2"))
+            Y_res2 = batchnorm(convolution_layer(Y_res1, filter_size=3, stride=1, padding="VALID", o_c=output_channels * 4, scope_name="C2"))
+
             return Y_res2 + Y
 
     # #### Generator Variables
@@ -124,18 +125,22 @@ def generator(input_imgs, no_of_residual_blocks, scope, output_channels=64):
         # Need to pad the images first to get same sized image after first convolution
         input_imgs = tf.pad(input_imgs, [[0, 0], [3, 3], [3, 3], [0, 0]], "REFLECT")
 
+        print((input_imgs).shape)
+        print('-' * 40)
+        print(scope)
         # For Downsampling
-        YD0 = tf.nn.relu(batchnorm(convolution_layer(input_imgs, filter_size=7, stride=1, output_channels, scope_name = "D1")))
-        YD1 = tf.nn.relu(batchnorm(convolution_layer(YD0, filter_size=3, stride=2, output_channels*2, padding= "SAME", scope_name = "D2")))
-        YD2 = tf.nn.relu(batchnorm(convolution_layer(YD0, filter_size=3, stride=2, output_channels*4, padding= "SAME", scope_name = "D3")))
+        YD0 = tf.nn.relu(batchnorm(convolution_layer(input_imgs, filter_size=7, stride=1, o_c=output_channels, scope_name="D1")))
+        YD1 = tf.nn.relu(batchnorm(convolution_layer(YD0, filter_size=3, stride=2, o_c=output_channels * 2, padding="SAME", scope_name="D2")))
+        YD2 = tf.nn.relu(batchnorm(convolution_layer(YD1, filter_size=3, stride=2, o_c=output_channels * 4, padding="SAME", scope_name="D3")))
 
         # For Residual Blocks
-        for i in range(1,no_of_residual_blocks+1):
-            Y_res = residual_block(YD2, scope_name = "R"+str(i))
+        for i in range(1, no_of_residual_blocks + 1):
+            Y_res = residual_block(YD2, scope_name="R" + str(i))
 
         # For Upsampling
-        YU1 = tf.nn.relu(batchnorm(deconvolution_layer(Y_res, output_channels*2, filter_size=3, stride=2, padding="SAME", scope_name = "U1")))
-        YU2 = tf.nn.relu(batchnorm(deconvolution_layer(YU1, output_channels, filter_size=3, stride=2, padding="SAME", scope_name = "U2")))
-        Y_out = tf.nn.tanh(convolution_layer(YU2, 3, filter_size=7, stride=1, padding="SAME", scope_name = "U3"))
-
+        YU1 = tf.nn.relu(batchnorm(deconvolution_layer(Y_res, output_channels * 2, filter_size=3, stride=2, padding="SAME", scope_name="U1")))
+        YU2 = tf.nn.relu(batchnorm(deconvolution_layer(YU1, output_channels, filter_size=3, stride=2, padding="SAME", scope_name="U2")))
+        Y_out = tf.nn.tanh(convolution_layer(YU2, filter_size=7, stride=1, o_c=3, padding="SAME", scope_name="U3"))
+        # import pdb
+        # pdb.set_trace()
         return Y_out
