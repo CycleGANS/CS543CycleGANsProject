@@ -5,6 +5,7 @@ import os
 from PIL import Image
 import numpy as np
 import glob
+import io_tools as io
 
 def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambda = 10.0, learning_rate=0.0002 ):
 
@@ -109,14 +110,14 @@ def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambd
     dataset = 'horse2zebra'
     Xpath = glob('./Datasets/' + dataset + '/trainA/*.jpg')
     Ypath = glob('./Datasets/' + dataset + '/trainB/*.jpg')
-    X_data = getdata(sess, Xpath, batch_size)     # Need to define getdata
-    Y_data = getdata(sess, Ypath, batch_size)
+    X_data = io.getdata(sess, Xpath, batch_size)     # Need to define getdata
+    Y_data = io.getdata(sess, Ypath, batch_size)
 
     # Test data
     X_test_path = glob('./Datasets/' + dataset + '/testA/*.jpg')
     Y_test_path = glob('./Datasets/' + dataset + '/testB/*.jpg')
-    X_test_data = getdata(sess, X_test_path, batch_size)     # Need to define getdata
-    Y_test_data = getdata(sess, Y_test_path, batch_size)     # Need to define getdata
+    X_test_data = io.getdata(sess, X_test_path, batch_size)     # Need to define getdata
+    Y_test_data = io.getdata(sess, Y_test_path, batch_size)     # Need to define getdata
 
     # Creating a file to write the summaries for tensorboard
     train_summary_writer = tf.summary.FileWriter( './Summary/train/'+dataset, sess.graph)
@@ -135,8 +136,8 @@ def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambd
         for j in range(1,no_of_batches+1):
             no_of_iterations += 1
 
-            X_batch = batch(sess, X_data)   #Define batch
-            Y_batch = batch(sess, Y_data)
+            X_batch = io.batch(sess, X_data)   #Define batch
+            Y_batch = io.batch(sess, Y_data)
 
             # Creating fake images for the discriminators
             GofXforDis, FofYforDis = sess.run([GofX, FofY], feed_dict={X: X_batch,Y: Y_batch})
@@ -158,8 +159,8 @@ def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambd
 
             # To see what some of the test images look like after certain number of iterations
             if no_of_iterations%150==0:
-                X_test_batch = batch(sess, X_test_data)   #Define batch
-                Y_test_batch = batch(sess, Y_test_data)
+                X_test_batch = io.batch(sess, X_test_data)   #Define batch
+                Y_test_batch = io.batch(sess, Y_test_data)
             	[GofX_sample, FofY_sample, GofFofY_sample, FofGofX_sample] = sess.run([GofX, FofY, GofFofY, FofGofX], feed_dict={X: X_test_batch, Y: Y_test_batch})
 
             	#Saving sample test images
@@ -171,18 +172,18 @@ def training(image_shape, batch_size, G_cyc_loss_lambda = 10.0, F_cyc_loss_lambd
                 	GofFofY_image = Image.fromarray(GofFofY_sample[l], "RGB")
                 	FofGofX_image = Image.fromarray(FofGofX_sample[l], "RGB")
 
-                    new_im_X = Image.new('RGB', (image_shape, image_shape))
+                    new_im_X = Image.new('RGB', (image_shape*3, image_shape))
                     new_im_X.paste(X_test_image, (0,0))
                     new_im_X.paste(GofX_image, (image_shape,0))
                     new_im_X.paste(FofGofX_image, (image_shape*2,0))
 
-                    new_im_Y = Image.new('RGB', (image_shape, image_shape))
+                    new_im_Y = Image.new('RGB', (image_shape*3, image_shape))
                     new_im_Y.paste(Y_test_image, (0,0))
                     new_im_Y.paste(FofY_image, (image_shape,0))
                     new_im_Y.paste(GofFofY_image, (image_shape*2,0))
 
-                	new_im_X.save('./Output/train/X'+str(l)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
-                	new_im_Y.save('./Output/train/Y'+str(l)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
+                	new_im_X.save('./Output/Train/X'+str(l)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
+                	new_im_Y.save('./Output/Train/Y'+str(l)+'_Epoch_(%d)_(%dof%d).jpg' % ( i, j, no_of_batches))     
 
         print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
 
