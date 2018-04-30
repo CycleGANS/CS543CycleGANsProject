@@ -6,7 +6,19 @@ from PIL import Image
 import numpy as np
 import glob
 import io_tools as io
+import scipy
 
+# The next function is taken from https://github.com/LynnHo/CycleGAN-Tensorflow-PyTorch/blob/master/image_utils.py
+# This function makes sure that the range of the images generated is between 0 and 255.
+def _to_range(images, min_value=0.0, max_value=1.0, dtype=None):
+    # transform images from [-1.0, 1.0] to [min_value, max_value] of dtype
+    assert \
+        np.min(images) >= -1.0 - 1e-5 and np.max(images) <= 1.0 + 1e-5 \
+        and (images.dtype == np.float32 or images.dtype == np.float64), \
+        'The input images should be float64(32) and in the range of [-1.0, 1.0]!'
+    if dtype is None:
+        dtype = images.dtype
+    return ((images + 1.) / 2. * (max_value - min_value) + min_value).astype(dtype)
 
 def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F_cyc_loss_lambda=10.0, learning_rate=0.0002):
 
@@ -118,7 +130,7 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
     Y_test_data = io.getdata(sess, Y_test_path, batch_size)     # Need to define getdata
 
     # Creating a file to write the summaries for tensorboard
-    train_summary_writer = tf.summary.FileWriter('./Summary/train/' + dataset, sess.graph)
+    train_summary_writer = tf.summary.FileWriter('./Summary/Train/' + dataset, sess.graph)
 
     # Initialization if starting from scratch, else restore the variables
     try:
@@ -150,40 +162,38 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
             train_summary_writer.add_summary(GF_vis_summ, no_of_iterations)
 
             # Creating Checkpoint
-            if no_of_iterations % 800 == 0:
-                save_path = saver.save(sess, '/Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
+            if no_of_iterations % 1 == 0:
+                save_path = saver.save(sess, './Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
                 print('Model saved in file: % s' % save_path)
 
             # To see what some of the test images look like after certain number of iterations
-            if no_of_iterations % 150 == 0:
+            if no_of_iterations % 1 == 0:
                 X_test_batch = io.batch(sess, X_test_data)  # Define batch
                 Y_test_batch = io.batch(sess, Y_test_data)
+
                 [GofX_sample, FofY_sample, GofFofY_sample, FofGofX_sample] = sess.run([GofX, FofY, GofFofY, FofGofX], feed_dict={X: X_test_batch, Y: Y_test_batch})
 
                 # Saving sample test images
                 for l in range(batch_size):
-                    X_test_image = Image.fromarray(X_test_batch[l], "RGB")
-                    Y_test_image = Image.fromarray(Y_test_batch[l], "RGB")
-                    GofX_image = Image.fromarray(GofX_sample[l], "RGB")
-                    FofY_image = Image.fromarray(FofY_sample[l], "RGB")
-                    GofFofY_image = Image.fromarray(GofFofY_sample[l], "RGB")
-                    FofGofX_image = Image.fromarray(FofGofX_sample[l], "RGB")
+                    
+                    new_im_X = np.zeros((image_shape, image_shape*3,3))
+                    new_im_X[:,:image_shape,:] = np.asarray(X_test_batch[l])
+                    new_im_X[:,image_shape:image_shape*2,:] = np.asarray(GofX_sample[l])
+                    new_im_X[:,image_shape*2:image_shape*3,:] = np.asarray(FofGofX_sample[l])
 
-                    new_im_X = Image.new('RGB', (image_shape * 3, image_shape))
-                    new_im_X.paste(X_test_image, (0, 0))
-                    new_im_X.paste(GofX_image, (image_shape, 0))
-                    new_im_X.paste(FofGofX_image, (image_shape * 2, 0))
+                    new_im_Y = np.zeros((image_shape, image_shape*3,3))
+                    new_im_Y[:,:image_shape,:] = np.asarray(Y_test_batch[l])
+                    new_im_Y[:,image_shape:image_shape*2,:] = np.asarray(FofY_sample[l])
+                    new_im_Y[:,image_shape*2:image_shape*3,:] = np.asarray(GofFofY_sample[l])                    
 
-                    new_im_Y = Image.new('RGB', (image_shape * 3, image_shape))
-                    new_im_Y.paste(Y_test_image, (0, 0))
-                    new_im_Y.paste(FofY_image, (image_shape, 0))
-                    new_im_Y.paste(GofFofY_image, (image_shape * 2, 0))
+                    scipy.misc.imsave('./Output/Train/X' + str(l) + '_Epoch_(%d)_(%dof%d).jpg' % (i, j, no_of_batches), _to_range(new_im_X, 0, 255, np.uint8))
+                    scipy.misc.imsave('./Output/Train/Y' + str(l) + '_Epoch_(%d)_(%dof%d).jpg' % (i, j, no_of_batches), _to_range(new_im_Y, 0, 255, np.uint8))
 
-                    new_im_X.save('./Output/Train/X' + str(l) + '_Epoch_(%d)_(%dof%d).jpg' % (i, j, no_of_batches))
-                    new_im_Y.save('./Output/Train/Y' + str(l) + '_Epoch_(%d)_(%dof%d).jpg' % (i, j, no_of_batches))
 
         print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
 
-    save_path = saver.save(sess, '/Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
+    save_path = saver.save(sess, '/.Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
     print('Model saved in file: % s' % save_path)
     sess.close()
+
+    return

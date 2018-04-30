@@ -41,7 +41,7 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         # Restore checkpoint.
         # --------------- Need to implement utils!!!!! ----------------
         try:
-            saver.restore(sess, "/Checkpoints/" + dataset)
+            saver.restore(sess, "/.Checkpoints/" + dataset)
         except:
             raise Exception('No checkpoint available!')
 
@@ -98,4 +98,11 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir):
         new_im.paste(gen_cyc_out_image, (image_shape * 2, 0))
 
         new_im.save(save_dir + '(%d).jpg' % (i))
+
+        new_im = np.zeros((image_shape, image_shape*3,3))
+        new_im[:,:image_shape,:] = np.asarray(real_im)
+        new_im[:,image_shape:image_shape*2,:] = np.asarray(gen_real_out)
+        new_im[:,image_shape*2:image_shape*3,:] = np.asarray(gen_cyc_out)                    
+
+        scipy.misc.imsave(save_dir + 'Image(%d).jpg' % (i), _to_range(new_im_X, 0, 255, np.uint8))
         print("Save image.")
