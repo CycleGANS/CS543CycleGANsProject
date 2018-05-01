@@ -4,10 +4,17 @@ from io_tools import *
 import glob
 import scipy.misc
 
-
-# ---- Need this !!! -----
-# from utils import utils
-# from utils import image_utils as im
+# The next function is taken from https://github.com/LynnHo/CycleGAN-Tensorflow-PyTorch/blob/master/image_utils.py
+# This function makes sure that the range of the images generated is between 0 and 255.
+def _to_range(images, min_value=0.0, max_value=1.0, dtype=None):
+    # transform images from [-1.0, 1.0] to [min_value, max_value] of dtype
+    assert \
+        np.min(images) >= -1.0 - 1e-5 and np.max(images) <= 1.0 + 1e-5 \
+        and (images.dtype == np.float32 or images.dtype == np.float64), \
+        'The input images should be float64(32) and in the range of [-1.0, 1.0]!'
+    if dtype is None:
+        dtype = images.dtype
+    return ((images + 1.) / 2. * (max_value - min_value) + min_value).astype(dtype)
 
 
 def test(dataset_str='horse2zebra', img_width=256, img_height=256):
@@ -41,7 +48,7 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         # Restore checkpoint.
         # --------------- Need to implement utils!!!!! ----------------
         try:
-            saver.restore(sess, "/.Checkpoints/" + dataset)
+            saver.restore(sess, "./Checkpoints/" + dataset_str)
         except:
             raise Exception('No checkpoint available!')
 
@@ -89,15 +96,15 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir):
         # # Temporarily use i as image name. Should change this.
         # im.imwrite(im.immerge(out_img, 1, 3), save_dir + '/' + str(i))
 
-        gen_real_out_image = Image.fromarray(gen_real_out, "RGB")
-        gen_cyc_out_image = Image.fromarray(gen_cyc_out, "RGB")
+        # gen_real_out_image = Image.fromarray(gen_real_out, "RGB")
+        # gen_cyc_out_image = Image.fromarray(gen_cyc_out, "RGB")
 
-        new_im = Image.new('RGB', (image_shape * 3, image_shape))
-        new_im.paste(real_img, (0, 0))
-        new_im.paste(gen_real_out_image, (image_shape, 0))
-        new_im.paste(gen_cyc_out_image, (image_shape * 2, 0))
+        # new_im = Image.new('RGB', (image_shape * 3, image_shape))
+        # new_im.paste(real_img, (0, 0))
+        # new_im.paste(gen_real_out_image, (image_shape, 0))
+        # new_im.paste(gen_cyc_out_image, (image_shape * 2, 0))
 
-        new_im.save(save_dir + '(%d).jpg' % (i))
+        # new_im.save(save_dir + '(%d).jpg' % (i))
 
         new_im = np.zeros((image_shape, image_shape*3,3))
         new_im[:,:image_shape,:] = np.asarray(real_im)

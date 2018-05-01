@@ -192,7 +192,7 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
 
         print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
 
-    save_path = saver.save(sess, '/.Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
+    save_path = saver.save(sess, './Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
     print('Model saved in file: % s' % save_path)
     sess.close()
 
