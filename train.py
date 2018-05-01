@@ -162,12 +162,12 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
             train_summary_writer.add_summary(GF_vis_summ, no_of_iterations)
 
             # Creating Checkpoint
-            if no_of_iterations % 1 == 0:
+            if no_of_iterations % 800 == 0:
                 save_path = saver.save(sess, './Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
                 print('Model saved in file: % s' % save_path)
 
             # To see what some of the test images look like after certain number of iterations
-            if no_of_iterations % 1 == 0:
+            if no_of_iterations % 100 == 0:
                 X_test_batch = io.batch(sess, X_test_data)  # Define batch
                 Y_test_batch = io.batch(sess, Y_test_data)
 

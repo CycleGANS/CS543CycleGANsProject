@@ -2,6 +2,7 @@ import tensorflow as tf
 import Generator as gen
 from io_tools import *
 import glob
+import numpy as np
 import scipy.misc
 
 # The next function is taken from https://github.com/LynnHo/CycleGAN-Tensorflow-PyTorch/blob/master/image_utils.py
@@ -31,7 +32,7 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
     elif image_shape == 128:
         no_of_residual_blocks = 6
 
-    saver = tf.train.Saver()
+    
 
     with tf.Session() as sess:
         # X and Y are for real images.
@@ -45,10 +46,12 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         Fof_GofX = gen.generator(GofX, no_of_residual_blocks, scope='G', output_channels=64)
         Gof_FofY = gen.generator(FofY, no_of_residual_blocks, scope='F', output_channels=64)
 
+        saver = tf.train.Saver(None)
+
         # Restore checkpoint.
         # --------------- Need to implement utils!!!!! ----------------
         try:
-            saver.restore(sess, "./Checkpoints/" + dataset_str)
+            saver.restore(sess, tf.train.latest_checkpoint("./Checkpoints/" + dataset_str))
         except:
             raise Exception('No checkpoint available!')
 
@@ -67,15 +70,15 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         Y_batch = batch(sess, Y_data)
 
         # Feed into test procedure to test and save results.
-        X_save_dir = './Outputs/Test/' + dataset_str + '/testA'
-        Y_save_dir = './Outputs/Test/' + dataset_str + '/testB'
+        X_save_dir = './Output/Test/' + dataset_str + '/testA'
+        Y_save_dir = './Output/Test/' + dataset_str + '/testB'
         # utils.mkdir([X_save_dir, Y_save_dir])
 
-        _test_procedure(X_batch, sess, GofX, Fof_GofX, X, X_save_dir)
-        _test_procedure(Y_batch, sess, FofY, Gof_FofY, Y, Y_save_dir)
+        _test_procedure(X_batch, sess, GofX, Fof_GofX, X, X_save_dir, image_shape)
+        _test_procedure(Y_batch, sess, FofY, Gof_FofY, Y, Y_save_dir, image_shape)
 
 
-def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir):
+def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir, image_shape):
     """Procedure to perform test on a batch of real images and save outputs.
     Args:
         gen_real: Generator that maps real data to fake image.
@@ -83,12 +86,14 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir):
         real_placeholder: Placeholder for real image.
         save_dir: Directory to save output image.
     """
-    for i in range(tf.shape(batch)[0]):
+
+    gen_real_out, gen_cyc_out = sess.run([gen_real, gen_cyc],
+                                             feed_dict={real_placeholder: batch})
+    for i in range(batch.shape[0]):
         # A single real image in batch.
         real_img = batch[i]
         # Generate fake and cyclic images.
-        gen_real_out, gen_cyc_out = sess.run([gen_real, gen_cyc],
-                                             feed_dict={real_placeholder: real_img})
+        
         # Concatenate 3 images into one.
         # out_img = np.concatenate((real_img, gen_real_out, gen_cyc_out), axis=0)
         # # Save result.
@@ -107,9 +112,9 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir):
         # new_im.save(save_dir + '(%d).jpg' % (i))
 
         new_im = np.zeros((image_shape, image_shape*3,3))
-        new_im[:,:image_shape,:] = np.asarray(real_im)
-        new_im[:,image_shape:image_shape*2,:] = np.asarray(gen_real_out)
-        new_im[:,image_shape*2:image_shape*3,:] = np.asarray(gen_cyc_out)                    
+        new_im[:,:image_shape,:] = np.asarray(real_img)
+        new_im[:,image_shape:image_shape*2,:] = np.asarray(gen_real_out[i])
+        new_im[:,image_shape*2:image_shape*3,:] = np.asarray(gen_cyc_out[i])                    
 
-        scipy.misc.imsave(save_dir + 'Image(%d).jpg' % (i), _to_range(new_im_X, 0, 255, np.uint8))
+        scipy.misc.imsave(save_dir + 'Image(%d).jpg' % (i), _to_range(new_im, 0, 255, np.uint8))
         print("Save image.")
