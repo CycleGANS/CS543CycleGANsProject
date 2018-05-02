@@ -125,9 +125,9 @@ def generator(input_imgs, no_of_residual_blocks, scope, output_channels=64):
         # Need to pad the images first to get same sized image after first convolution
         input_imgs = tf.pad(input_imgs, [[0, 0], [3, 3], [3, 3], [0, 0]], "REFLECT")
 
-        print((input_imgs).shape)
-        print('-' * 40)
-        print(scope)
+        # print((input_imgs).shape)
+        # print('-' * 40)
+        # print(scope)
         # For Downsampling
         YD0 = tf.nn.relu(batchnorm(convolution_layer(input_imgs, filter_size=7, stride=1, o_c=output_channels, scope_name="D1")))
         YD1 = tf.nn.relu(batchnorm(convolution_layer(YD0, filter_size=3, stride=2, o_c=output_channels * 2, padding="SAME", scope_name="D2")))
