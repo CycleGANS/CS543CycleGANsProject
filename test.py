@@ -7,6 +7,8 @@ import scipy.misc
 
 # The next function is taken from https://github.com/LynnHo/CycleGAN-Tensorflow-PyTorch/blob/master/image_utils.py
 # This function makes sure that the range of the images generated is between 0 and 255.
+
+
 def _to_range(images, min_value=0.0, max_value=1.0, dtype=None):
     # transform images from [-1.0, 1.0] to [min_value, max_value] of dtype
     assert \
@@ -32,9 +34,11 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
     elif image_shape == 128:
         no_of_residual_blocks = 6
 
-    
+    # Session on GPU
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
 
-    with tf.Session() as sess:
+    with tf.Session(config=config) as sess:
         # X and Y are for real images.
         X = tf.placeholder(tf.float32, shape=[None, img_width, img_height, 3])
         Y = tf.placeholder(tf.float32, shape=[None, img_width, img_height, 3])
@@ -88,12 +92,12 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir, 
     """
 
     gen_real_out, gen_cyc_out = sess.run([gen_real, gen_cyc],
-                                             feed_dict={real_placeholder: batch})
+                                         feed_dict={real_placeholder: batch})
     for i in range(batch.shape[0]):
         # A single real image in batch.
         real_img = batch[i]
         # Generate fake and cyclic images.
-        
+
         # Concatenate 3 images into one.
         # out_img = np.concatenate((real_img, gen_real_out, gen_cyc_out), axis=0)
         # # Save result.
@@ -111,10 +115,10 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir, 
 
         # new_im.save(save_dir + '(%d).jpg' % (i))
 
-        new_im = np.zeros((image_shape, image_shape*3,3))
-        new_im[:,:image_shape,:] = np.asarray(real_img)
-        new_im[:,image_shape:image_shape*2,:] = np.asarray(gen_real_out[i])
-        new_im[:,image_shape*2:image_shape*3,:] = np.asarray(gen_cyc_out[i])                    
+        new_im = np.zeros((image_shape, image_shape * 3, 3))
+        new_im[:, :image_shape, :] = np.asarray(real_img)
+        new_im[:, image_shape:image_shape * 2, :] = np.asarray(gen_real_out[i])
+        new_im[:, image_shape * 2:image_shape * 3, :] = np.asarray(gen_cyc_out[i])
 
-        scipy.misc.imsave(save_dir + 'Image(%d).jpg' % (i), _to_range(new_im, 0, 255, np.uint8))
+        scipy.misc.imsave(save_dir + 'Image(%d).png' % (i), _to_range(new_im, 0, 255, np.uint8))
         print("Save image.")

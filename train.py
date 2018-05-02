@@ -10,6 +10,8 @@ import scipy
 
 # The next function is taken from https://github.com/LynnHo/CycleGAN-Tensorflow-PyTorch/blob/master/image_utils.py
 # This function makes sure that the range of the images generated is between 0 and 255.
+
+
 def _to_range(images, min_value=0.0, max_value=1.0, dtype=None):
     # transform images from [-1.0, 1.0] to [min_value, max_value] of dtype
     assert \
@@ -19,6 +21,7 @@ def _to_range(images, min_value=0.0, max_value=1.0, dtype=None):
     if dtype is None:
         dtype = images.dtype
     return ((images + 1.) / 2. * (max_value - min_value) + min_value).astype(dtype)
+
 
 def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F_cyc_loss_lambda=10.0, learning_rate=0.0002):
 
@@ -134,7 +137,7 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
 
     # Initialization if starting from scratch, else restore the variables
     try:
-        saver.restore(sess, "/Checkpoints/" + dataset)
+        saver.restore(sess, tf.train.latest_checkpoint("./Checkpoints/" + dataset_str))
     except:
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -175,22 +178,21 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
 
                 # Saving sample test images
                 for l in range(batch_size):
-                    
-                    new_im_X = np.zeros((image_shape, image_shape*3,3))
-                    new_im_X[:,:image_shape,:] = np.asarray(X_test_batch[l])
-                    new_im_X[:,image_shape:image_shape*2,:] = np.asarray(GofX_sample[l])
-                    new_im_X[:,image_shape*2:image_shape*3,:] = np.asarray(FofGofX_sample[l])
 
-                    new_im_Y = np.zeros((image_shape, image_shape*3,3))
-                    new_im_Y[:,:image_shape,:] = np.asarray(Y_test_batch[l])
-                    new_im_Y[:,image_shape:image_shape*2,:] = np.asarray(FofY_sample[l])
-                    new_im_Y[:,image_shape*2:image_shape*3,:] = np.asarray(GofFofY_sample[l])                    
+                    new_im_X = np.zeros((image_shape, image_shape * 3, 3))
+                    new_im_X[:, :image_shape, :] = np.asarray(X_test_batch[l])
+                    new_im_X[:, image_shape:image_shape * 2, :] = np.asarray(GofX_sample[l])
+                    new_im_X[:, image_shape * 2:image_shape * 3, :] = np.asarray(FofGofX_sample[l])
 
-                    scipy.misc.imsave('./Output/Train/X' + str(l) + '_Epoch_(%d)_(%dof%d).jpg' % (i, j, no_of_batches), _to_range(new_im_X, 0, 255, np.uint8))
-                    scipy.misc.imsave('./Output/Train/Y' + str(l) + '_Epoch_(%d)_(%dof%d).jpg' % (i, j, no_of_batches), _to_range(new_im_Y, 0, 255, np.uint8))
+                    new_im_Y = np.zeros((image_shape, image_shape * 3, 3))
+                    new_im_Y[:, :image_shape, :] = np.asarray(Y_test_batch[l])
+                    new_im_Y[:, image_shape:image_shape * 2, :] = np.asarray(FofY_sample[l])
+                    new_im_Y[:, image_shape * 2:image_shape * 3, :] = np.asarray(GofFofY_sample[l])
 
+                    scipy.misc.imsave('./Output/Train/' + dataset + '/X' + str(l) + '_Epoch_(%d)_(%dof%d).png' % (i, j, no_of_batches), _to_range(new_im_X, 0, 255, np.uint8))
+                    scipy.misc.imsave('./Output/Train/' + dataset + '/Y' + str(l) + '_Epoch_(%d)_(%dof%d).png' % (i, j, no_of_batches), _to_range(new_im_Y, 0, 255, np.uint8))
 
-        print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
+            print("Epoch: (%3d) Batch Number: (%5d/%5d)" % (i, j, no_of_batches))
 
     save_path = saver.save(sess, './Checkpoints/' + dataset + '/Epoch_(%d)_(%dof%d).ckpt' % (i, j, no_of_batches))
     print('Model saved in file: % s' % save_path)
