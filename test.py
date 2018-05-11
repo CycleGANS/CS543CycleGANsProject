@@ -47,8 +47,8 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         GofX = gen.generator(X, no_of_residual_blocks, scope='G', output_channels=64)
         FofY = gen.generator(Y, no_of_residual_blocks, scope='F', output_channels=64)
         # Convert transformed images back to original one (cyclic).
-        Fof_GofX = gen.generator(GofX, no_of_residual_blocks, scope='G', output_channels=64)
-        Gof_FofY = gen.generator(FofY, no_of_residual_blocks, scope='F', output_channels=64)
+        Fof_GofX = gen.generator(GofX, no_of_residual_blocks, scope='F', output_channels=64)
+        Gof_FofY = gen.generator(FofY, no_of_residual_blocks, scope='G', output_channels=64)
 
         saver = tf.train.Saver(None)
 
@@ -56,6 +56,7 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         # --------------- Need to implement utils!!!!! ----------------
         try:
             saver.restore(sess, tf.train.latest_checkpoint("./Checkpoints/" + dataset_str))
+            print('Checkpoints Restored !')
         except:
             raise Exception('No checkpoint available!')
 
@@ -73,6 +74,7 @@ def test(dataset_str='horse2zebra', img_width=256, img_height=256):
         X_batch = batch(sess, X_data)
         Y_batch = batch(sess, Y_data)
 
+        print('test data :' + dataset_str + '- uploaded!')
         # Feed into test procedure to test and save results.
         X_save_dir = './Output/Test/' + dataset_str + '/testA'
         Y_save_dir = './Output/Test/' + dataset_str + '/testB'
@@ -90,9 +92,10 @@ def _test_procedure(batch, sess, gen_real, gen_cyc, real_placeholder, save_dir, 
         real_placeholder: Placeholder for real image.
         save_dir: Directory to save output image.
     """
-
+    print('Test Images sent to generator..')
     gen_real_out, gen_cyc_out = sess.run([gen_real, gen_cyc],
                                          feed_dict={real_placeholder: batch})
+    print('Images obtatined back generator..')
     for i in range(batch.shape[0]):
         # A single real image in batch.
         real_img = batch[i]

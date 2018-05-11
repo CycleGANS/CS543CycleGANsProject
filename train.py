@@ -110,7 +110,7 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
     DY_summary = tf.summary.scalar("DY_tot_loss", DY_tot_loss)
 
     # For saving the model, the max_to_keep parameter saves just 5 models. I did this so that we don't run out of memory.
-    saver = tf.train.Saver(max_to_keep=5)
+    saver = tf.train.Saver(max_to_keep=1)
 
     # Session on GPU
     config = tf.ConfigProto(allow_soft_placement=True)
@@ -137,7 +137,9 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
 
     # Initialization if starting from scratch, else restore the variables
     try:
-        saver.restore(sess, tf.train.latest_checkpoint("./Checkpoints/" + dataset_str))
+
+        saver.restore(sess, tf.train.latest_checkpoint("./Checkpoints/" + dataset))
+        print('Checkpoints Restored!')
     except:
         init = tf.global_variables_initializer()
         sess.run(init)
@@ -170,7 +172,7 @@ def training(dataset, epochs, image_shape, batch_size, G_cyc_loss_lambda=10.0, F
                 print('Model saved in file: % s' % save_path)
 
             # To see what some of the test images look like after certain number of iterations
-            if no_of_iterations % 100 == 0:
+            if no_of_iterations % 400 == 0:
                 X_test_batch = io.batch(sess, X_test_data)  # Define batch
                 Y_test_batch = io.batch(sess, Y_test_data)
 
